@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic-Tac-Toe</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .game {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    #status {
+      font-size: 1.2rem;
+      margin: 15px 0;
+      color: #555;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+      margin: 20px auto;
+    }
+
+    .square {
+      width: 100px;
+      height: 100px;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #333;
+      border: none;
+      border-radius: 15px;
+      background: #f0f0f0;
+      box-shadow: inset 3px 3px 6px #ccc, inset -3px -3px 6px #fff;
+      transition: background 0.3s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .square:hover:not(:disabled) {
+      background: #e0e0e0;
+      transform: scale(1.05);
+    }
+
+    .square:disabled {
+      cursor: default;
+      color: #999;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    button.control {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    button.control:hover {
+      background: linear-gradient(to right, #5a67d8, #6b46c1);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>Tic-Tac-Toe</h1>
+    <div id="status">Next Player: X</div>
+    <div class="board" id="board"></div>
+    <div class="buttons">
+      <button class="control" id="modeBtn" onclick="toggleMode()">Mode: PvP</button>
+      <button class="control" onclick="restartGame()">Restart</button>
+    </div>
+  </div>
+
+  <script>
+    let board = Array(9).fill(null);
+    let isXNext = true;
+    let mode = "PvP";
+    const winningCombinations = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    function checkWinner() {
+      for (let [a, b, c] of winningCombinations) {
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+      return board.includes(null) ? null : "Draw";
+    }
+
+    function getRandomMove() {
+      const emptyIndices = board
+        .map((val, idx) => (val === null ? idx : null))
+        .filter((idx) => idx !== null);
+      return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    }
+
+    function handleClick(index) {
+      if (board[index] || checkWinner()) return;
+
+      board[index] = isXNext ? "X" : "O";
+      isXNext = !isXNext;
+      updateBoard();
+
+      if (mode === "AI" && !isXNext && !checkWinner()) {
+        setTimeout(() => {
+          let aiMove = getRandomMove();
+          if (aiMove !== -1) {
+            board[aiMove] = "O";
+            isXNext = true;
+            updateBoard();
+          }
+        }, 500);
+      }
+    }
+
+    function updateBoard() {
+      const boardElement = document.getElementById("board");
+      boardElement.innerHTML = "";
+
+      board.forEach((value, index) => {
+        const button = document.createElement("button");
+        button.classList.add("square");
+        button.textContent = value || "";
+        button.onclick = () => handleClick(index);
+        if (value || checkWinner()) {
+          button.disabled = true;
+        }
+        boardElement.appendChild(button);
+      });
+
+      let winner = checkWinner();
+      const status = document.getElementById("status");
+      status.textContent = winner
+        ? winner === "Draw"
+          ? "It's a Draw!"
+          : `Winner: ${winner}`
+        : `Next Player: ${isXNext ? "X" : "O"}`;
+    }
+
+    function restartGame() {
+      board = Array(9).fill(null);
+      isXNext = true;
+      updateBoard();
+    }
+
+    function toggleMode() {
+      mode = mode === "PvP" ? "AI" : "PvP";
+      document.getElementById("modeBtn").textContent = "Mode: " + mode;
+      restartGame();
+    }
+
+    document.addEventListener("DOMContentLoaded", updateBoard);
+  </script>
+</body>
+</html>
